@@ -9,6 +9,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Test
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.core.scheduler.Schedulers
 import reactor.test.test
 
 class Part11BlockingToReactive {
@@ -25,7 +26,8 @@ class Part11BlockingToReactive {
 
     // TODO Create a Flux for reading all users from the blocking repository deferred until the flux is subscribed, and run it with an elastic scheduler
     fun blockingRepositoryToFlux(repository: BlockingRepository<User>): Flux<User> {
-        return null!!
+        return Flux.defer { Flux.fromIterable(repository.findAll()) }
+                .subscribeOn(Schedulers.elastic())
     }
 
     @Test
@@ -46,7 +48,9 @@ class Part11BlockingToReactive {
 
     // TODO Insert users contained in the Flux parameter in the blocking repository using an parallel scheduler and return a Mono<Void> that signal the end of the operation
     fun fluxToBlockingRepository(flux: Flux<User>, repository: BlockingRepository<User>): Mono<Void> {
-        return null!!
+        return flux.publishOn(Schedulers.elastic())
+                .doOnNext{ repository.save(it) }
+                .then()
     }
 
 }
